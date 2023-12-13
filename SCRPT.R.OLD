@@ -8,6 +8,7 @@ library(dplyr)
 library(tidyr)
 library(stringi)
 library(readxl)
+library(synthesisr)
 library(revtools)
 library(writexl)
 library(shinycssloaders)
@@ -281,7 +282,7 @@ server <- function(input, output, session) {
     
     ##upload bibliographic file of includes
     observeEvent(input$uniq1_file,{
-        b <- read_bibliography(input$uniq1_file$datapath)
+        b <- read_refs(input$uniq1_file$datapath)
         cols <- c("title", "abstract", "keywords")
         biblist$m <- data.frame(matrix(ncol = 0, nrow = nrow(b)))
         for (i in cols){
@@ -295,7 +296,7 @@ server <- function(input, output, session) {
     
     ##upload bibliographic file
     observeEvent(input$uniq2_file,{
-        b <- read_bibliography(input$uniq2_file$datapath)
+        b <- read_refs(input$uniq2_file$datapath)
         cols <- c("title", "abstract", "keywords")
         biblist$n <- data.frame(matrix(ncol = 0, nrow = nrow(b)))
         for (i in cols){
@@ -307,7 +308,7 @@ server <- function(input, output, session) {
     })
     
     
-    ##find uniqie words
+    ##find unique words
     observeEvent(input$find,{
         biblist$o <- setdiff(biblist$m, biblist$n)
         output$Unique <- renderDataTable(data.frame(biblist$o), options = list(dom = "tp"))
@@ -385,7 +386,7 @@ server <- function(input, output, session) {
     
     ##upload bibliographic file
     observeEvent(input$ref_file,{
-        b <- read_bibliography(input$ref_file$datapath)
+        b <- read_refs(input$ref_file$datapath)
         cols <- c("author", "title", "abstract", "keywords", "Label")
         biblist$l <- data.frame(matrix(ncol = 0, nrow = nrow(b)))
         for (i in cols){

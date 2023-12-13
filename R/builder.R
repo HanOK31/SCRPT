@@ -1,0 +1,1 @@
+# This holds functions relating to search string building and manipulation
