@@ -1,0 +1,1 @@
+# This holds functions relating to full text (e.g. PDF file) manipulation
