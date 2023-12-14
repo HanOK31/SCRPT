@@ -1,10 +1,11 @@
 # This holds functions that are shared across the package
 
 formatSearchString <- function(list){
-    gsub("^\"", "<",list)
-    gsub("\"$", ">", list)
-    gsub("(.*)( NEAR/)([[:digit:]])(.*)", "\\1\\3\\~([[:digit:]])", list)
-    substring <- paste0(list, collapse = "OR")
+    list <- gsub("^\"", "<",list)
+    list <-  gsub("\"$", ">", list)
+    list <- gsub("(.*)( NEAR/)([[:digit:]])(.*)", '"\\1\\4\\\"~3', list)
+    list <- paste0("(", list,")")
+    substring <- paste0(list, collapse = " OR ")
     return (substring)
 }
 
