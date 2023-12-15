@@ -33,3 +33,5 @@ runSearchString <- function(substring, textcorpus){
     results <- corpustools::search_contexts(frame, substring)
     return(results$hits)
 }
+
+
