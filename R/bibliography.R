@@ -53,3 +53,7 @@ importBibliography <- function(
     }
     return(bibframe)
 }
+
+listUniqueWordsInBibliography <- function(bib) {
+    makeCorpus(bib)
+}

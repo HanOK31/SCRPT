@@ -47,19 +47,3 @@ runSearchString <- function(substring, textcorpus){
     results <- corpustools::search_contexts(frame, substring)
     return(results$hits)
 }
-
-
-
-downloadRis <- function(text){
-    filename <- "SCRPT_output.ris",
-        content <- function(file){
-            write_bibliography(as.bibliography(text), filename = file, format = "ris") 
-    }
-}
-
-downloadxlxs <- function(){
-    filename <- "SCRPT_output.xlsx",
-        content <- function(file){
-            write_xlsx(data.frame(text), file)
-    }
-}

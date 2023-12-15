@@ -8,7 +8,7 @@
 #' @return dataframe containing an empty history column
 #' @examples
 #' st <- initialiseSearchTerms()
-initialiseSearchTerms <- function(){
+initialiseSearchTerms <- function() {
     frame <- data.frame(History = character())
     return(frame)
 }
@@ -23,31 +23,39 @@ initialiseSearchTerms <- function(){
 #' @return the dataframe with a list added
 #' @examples
 #' searchTerms <- addSearchTerm(searchTerms, "Paramedic AND Ambulance")
-addSearchTerm <- function(df, term){
-    frame <- rbind(data.frame(df, data.frame(History = term, stringsAsFactors = FALSE)))
+addSearchTerm <- function(df, term) {
+    frame <- rbind(
+        data.frame(
+            df,
+            data.frame(
+                History = term,
+                stringsAsFactors = FALSE
+            )
+        )
+    )
     return(frame)
 }
 
-removeSearchTerm <- function(list, id){
-    frame <- list[-as.numeric(id),]
+removeSearchTerm <- function(list, id) {
+    frame <- list[-as.numeric(id), ]
     return(frame)
 }
 
-replaceSearchTerm <- function(list, id, newTerm){
+replaceSearchTerm <- function(list, id, newTerm) {
     frame <- list[id, "History"] <- as.character(newTerm)
     return(frame)
 }
 
-getSearchTerm <- function(list, id){
+getSearchTerm <- function(list, id) {
     term <- list[id, "History"]
     return(term)
 }
 
-combineSearchTerms <- function(list, ids){
+combineSearchTerms <- function(list, ids) {
     searchString <- paste0("(", list[ids], collapse = " OR ", ")")
     return(searchString)
 }
 
-makeCorpusSearchString <- function(searchString){
+makeCorpusSearchString <- function(searchString) {
 
 }
