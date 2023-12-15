@@ -25,13 +25,8 @@ initialiseSearchTerms <- function() {
 #' searchTerms <- addSearchTerm(searchTerms, "Paramedic AND Ambulance")
 addSearchTerm <- function(df, term) {
     frame <- rbind(
-        data.frame(
-            df,
-            data.frame(
-                History = term,
-                stringsAsFactors = FALSE
-            )
-        )
+        df,
+        data.frame(History = term)
     )
     return(frame)
 }
@@ -52,7 +47,7 @@ getSearchTerm <- function(list, id) {
 }
 
 combineSearchTerms <- function(list, ids) {
-    searchString <- paste0("(", list[ids], collapse = " OR ", ")")
+    searchString <- paste0("(", list[ids, ], collapse = " OR ", ")")
     return(searchString)
 }
 

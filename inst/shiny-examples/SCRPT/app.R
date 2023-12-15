@@ -1,6 +1,6 @@
 library(shiny)
 library(devtools)
-library(textreadr)
+#library(textreadr)
 library(DT)
 library(tabulizer)
 library(stringr)
@@ -13,7 +13,7 @@ library(writexl)
 library(shinycssloaders)
 
 options(
-    shiny.maxRequestSize = 10000*1024^2,
+    shiny.maxRequestSize = 10000 * 1024^2,
     "repos" = c(
         "CRAN" = "https://cran.rstudio.com",
         "tabulizer" = "https://github.com/ropensci/tabulizer",
@@ -507,48 +507,50 @@ ui <- navbarPage(
 
 server <- function(input, output, session) {
     ##variables
-    ## Unique Words
-    includesBib <- shiny::reactiveValues()
-    excludesBib <- shiny::reactiveValues()
-
-    ## variables (keywords)
-    kw1 <- shiny::reactiveValues()
-    termsFinal <- shiny::reactiveValues()
+    reactSCRPT <- shiny::reactiveValues()
+    reactSCRPT$kw1 <- initialiseSearchTerms()
 
     #variables (title and abstract screening)
     biblist <- reactiveValues()
-    thresh <- reactiveValues(a1 = NULL, a2 = NULL, t1 = NULL, t2 = NULL)
 
     #variables (full text)
-    placeholder <- reactiveValues()
     textlist <- reactiveValues(a = NULL)
-    namelist <- reactiveValues(a = NULL)
-    errorlist <- reactiveValues(a = NULL)
 
     ## find unique words from included studies ##
 
     ##upload bibliographic file of includes
     shiny::observeEvent(
         input$uniq1_file, {
-            includesBib <- importBibliography(input$uniq1_file)
-            includesBib <- makeCorpus(includesBib)
+            reactSCRPT$includesBib <- importBibliography(
+                input$uniq1_file$datapath
+            )
+            reactSCRPT$includesBib <- makeCorpus(reactSCRPT$includesBib)
         }
     )
     ##upload bibliographic file (excludes)
     shiny::observeEvent(
         input$uniq2_file, {
-            excludesBib <- importBibliography(input$uniq2_file)
-            excludesBib <- makeCorpus(excludesBib)
+            reactSCRPT$excludesBib <- importBibliography(
+                input$uniq2_file$datapath
+            )
+            reactSCRPT$excludesBib <- makeCorpus(reactSCRPT$excludesBib)
         }
     )
 
     ##find unique words
     shiny::observeEvent(
         input$find, {
-            output$Unique <- corpustools::compare_corpus(
-                includesBib,
-                excludesBib,
+            corpusCompare <- corpustools::compare_corpus(
+                reactSCRPT$includesBib,
+                reactSCRPT$excludesBib,
                 feature = "token"
+            )
+            output$Unique <- DT::renderDT(
+                select(
+                    corpusCompare[corpusCompare$freq.y == 0, ],
+                    word = feature, #nolint
+                    included = freq.x, #nolint
+                )
             )
         }
     )
@@ -567,9 +569,8 @@ server <- function(input, output, session) {
     observeEvent(
         input$KWgo,
         {
-            kw1 <- initialiseSearchTerms()
-            kw1 <- addSearchTerm(
-                kw1,
+            reactSCRPT$kw1 <- addSearchTerm(
+                reactSCRPT$kw1,
                 input$keywords
             )
             updateTextAreaInput(
@@ -579,7 +580,7 @@ server <- function(input, output, session) {
             )
             #table of keywords
             output$KWhistory <- renderDataTable(
-                kw1,
+                reactSCRPT$kw1,
                 escape = FALSE,
                 server = FALSE,
                 extension = c("Select", "Buttons"),
@@ -639,7 +640,10 @@ server <- function(input, output, session) {
     observeEvent(
         input$delrow,
         {
-            kw1 <- removeSearchTerm(kw1, input$KWhistory_rows_selected)
+            reactSCRPT$kw1 <- removeSearchTerm(
+                reactSCRPT$kw1,
+                input$KWhistory_rows_selected
+            )
         }
     )
 
@@ -647,8 +651,8 @@ server <- function(input, output, session) {
     observeEvent(
         input$KWhistory_cell_edit,
         {
-            kw1 <- replaceSearchTerm(
-                kw1,
+            reactSCRPT$kw1 <- replaceSearchTerm(
+                reactSCRPT$kw1,
                 input$KWhistory_cell_edit$row,
                 input$KWhistory_cell_edit$value
             )
@@ -659,13 +663,12 @@ server <- function(input, output, session) {
     observeEvent(
         input$Combine,
         {
-            output$KWfinal <- renderText(
-                combineSearchTerms(
-                    kw1,
-                    input$KWhistory_rows_selected
-                )
+            outST <- combineSearchTerms(
+                reactSCRPT$kw1,
+                input$KWhistory_rows_selected
             )
-            termsFinal <- formatSearchString(output$KWfinal)
+            termsFinal <- formatSearchString(outST)
+            output$KWfinal <- renderText(termsFinal)
         }
     )
 
@@ -675,9 +678,9 @@ server <- function(input, output, session) {
     observeEvent(
         input$ref_file,
         {
-            biblist <- importBibliography(input$ref_file)
-            biblist <- cleaning(biblist$file)
-            biblist <- makeCorpus(biblist$file)
+            biblist <- importBibliography(input$ref_file$datapath)
+            biblist <- cleaning(biblist)
+            biblist <- makeCorpus(biblist)
         }
     )
 
@@ -688,32 +691,53 @@ server <- function(input, output, session) {
             output$test <- renderDataTable(runSearchString(termsFinal, biblist))
         }
     )
-    
+
     ##download ris file
-    #output$risout <- downloadHandler(
-    #    downloadRis(output$test)
-    #)
-    
+    output$risout <- downloadHandler(
+        "SCRPT_out.RIS",
+        function(file) {
+            synthesisr::write_refs(
+                output$test,
+                file = file,
+                format = "ris"
+            )
+        }
+    )
+
     #----------------------------------------------------------------
-   
+
     ##get list of full texts
-    observeEvent(input$zip_file,{
-        importFullTexts(input$zip_file$name, input$zip_file$datapath)
-        return(textlist)
-    })
+    observeEvent(
+        input$zip_file,
+        {
+            importFullTexts(input$zip_file$name, input$zip_file$datapath)
+            return(textlist)
+        }
+    )
 
     #Analysis for full texts
-    observeEvent(input$Screengo2,{
-        output$test2 <- renderDataTable(runSearchString(termsFinal, textlist$a))
-    })
+    observeEvent(
+        input$Screengo2,
+        {
+            output$test2 <- renderDataTable(
+                runSearchString(
+                    termsFinal,
+                    textlist$a
+                )
+            )
+        }
+    )
 
     ##download excel file
-    output$exout <- downloadHandler(
-        downloadxlxs(output$test2)
+    output$exout <- shiny::downloadHandler(
+        "SCRPT_output.xlsx",
+        function(fn) {
+            writexl::write_xlsx(data.frame(output$test2), fn)
+        }
     )
 }
 
 #-------------------------------------------------------------------------
 
-# Run the application 
+# Run the application
 shinyApp(ui = ui, server = server)
