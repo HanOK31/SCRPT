@@ -25,11 +25,7 @@ server <- function(input, output, session) {
     
     ##download list of unique words
     output$uniqout <- downloadHandler(
-        filename <- "Unique words.xlsx",
-        content <- function(file){
-            DL <- data.frame(output$Unique)
-            write_xlsx(DL, file)
-        }
+        downloadxlxs(output$Unique)
     )
     
     #-----------------------------------------------------------
@@ -108,15 +104,13 @@ server <- function(input, output, session) {
     
     ##download ris file
     output$risout <- downloadHandler(
-        filename <- "TA_Screening_priorities.ris",
-        content <- function(file){
-            write_bibliography(as.bibliography(output$test), filename = file, format = "ris") 
-        }
+        downloadRis(output$test)
     )
     
     #----------------------------------------------------------------
     
     ##variables
+    textlist <- reactiveValues()
     
     ##get list of full texts
     observeEvent(input$zip_file,{
@@ -160,34 +154,13 @@ server <- function(input, output, session) {
     
     #Analysis for full texts
     observeEvent(input$Screengo2,{
-        FTexts$t <- data.frame(Title = name_list$l, Text = editcol(text_list$c), Keyword_count = "0", Decision = "1", stringsAsFactors = FALSE)
-        for (i in 1:nrow(FTexts$t)){
-            FTexts$t$Keyword_count[i] <- sapply(gregexpr(KWList$l, FTexts$t$Text[i], perl=TRUE), function(x) sum(x >0))
-        }
-        FTexts$t$Keyword_count[is.na(FTexts$t$Keyword_count)] <- 0
-        thresh$t1 <- quantile(as.numeric(FTexts$t$Keyword_count), 0.25)
-        thresh$t2 <- quantile(as.numeric(FTexts$t$Keyword_count), 0.75)
-        for (j in 1:nrow(FTexts$t)){
-            ifelse (as.numeric(FTexts$t$Keyword_count[j]) >= thresh$t2,
-                FTexts$t$Decision[j] <- "Priority",
-                ifelse(as.numeric(FTexts$t$Keyword_count[j]) <= thresh$t1,
-                    FTexts$t$Decision[j] <- "Non-priority",
-                    FTexts$t$Decision[j] <- "Manual Check"))
-        }
-        ##ft as table
-        output$test2 <- renderDataTable(FTexts$t[, !names(FTexts$t) %in% "Text"], options = list(dom = "tp"))
-        return(FTexts$t)
+        output$test2 <- renderDataTable(runSearchString(termsFinal, textlist))
     })
     
     
     ##download excel file
     output$exout <- downloadHandler(
-        filename <- "FT_Screening.xlsx",
-        content <- function(file){
-            ex1 <- FTexts$t[, !names(FTexts$t) %in% "Text"]
-            ex1 <- data.frame(ex1)
-            write_xlsx(ex1, file) 
-        }
+        downloadxlxs(output$test2)
     )
     
 }
