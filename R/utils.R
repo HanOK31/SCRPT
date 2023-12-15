@@ -35,3 +35,16 @@ runSearchString <- function(substring, textcorpus){
 }
 
 
+downloadRis <- function(text){
+    filename <- "SCRPT_output.ris",
+        content <- function(file){
+            write_bibliography(as.bibliography(text), filename = file, format = "ris") 
+    }
+}
+
+downloadxlxs <- function(){
+    filename <- "SCRPT_output.xlsx",
+        content <- function(file){
+            write_xlsx(data.frame(text), file)
+    }
+}
