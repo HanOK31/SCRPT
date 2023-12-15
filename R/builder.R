@@ -9,7 +9,7 @@
 #' @examples
 #' st <- initialiseSearchTerms()
 initialiseSearchTerms <- function(){
-    frame <- data.frame(History = NULL)
+    frame <- data.frame(History = character())
     return(frame)
 }
 

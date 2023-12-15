@@ -14,16 +14,41 @@
 #' @return the bibliography data frame
 #' @examples
 #' bib <- importBibliography("./inst/extdata/test.ris")
-importBibliography <- function(path, columns= c("author", "title", "abstract", "keywords", "Label"), keywords= TRUE){
+importBibliography <- function(
+    path,
+    columns =
+        c(
+            "author",
+            "title",
+            "abstract",
+            "keywords",
+            "Label"
+        ),
+    keywords = TRUE
+) {
     bib <- synthesisr::read_refs(path)
     cols <- columns
-    bibframe <- data.frame(matrix(ncol = 0, nrow = nrow(b)))
-        for (i in cols){
-            if (i %in% colnames(bib)){
-                bibframe[i] <- gsub("([[:upper:]])", "\\L\\1", bib[,i], perl = TRUE)
-            }
+    bibframe <- data.frame(
+        matrix(
+            ncol = 0,
+            nrow = nrow(
+                bib
+            )
+        )
+    )
+    for (i in cols){
+        if (
+            i %in% colnames(bib)
+        ) {
+            bibframe[i] <- gsub(
+                "([[:upper:]])",
+                "\\L\\1",
+                bib[,i],
+                perl = TRUE
+            )
         }
-    if(keywords==TRUE){
+    }
+    if (keywords == TRUE) {
         bibframe$Keyword_count <- 0
     }
     return(bibframe)
@@ -39,7 +64,38 @@ importBibliography <- function(path, columns= c("author", "title", "abstract", "
 #' @return a character vector containing the unique words in the bibliography
 #' @examples
 #' unique1 <- listUniqueWordsInBibliography(bibframe)
-listUniqueWordsInBibliography <- function(bibframe, columns= c("title", "abstract", "keywords")){
-    bibframe <- bibframe[columns]
-    bibframe <- unique(unlist(strsplit(cleanText(as.character(bibframe)), "\\s+")))
+listUniqueWordsInBibliography <- function(
+    bibframe,
+    columns = c(
+        "title",
+        "abstract",
+        "keywords"
+    )
+) {
+    newbibframe <- as.data.frame(
+        matrix(
+            0,
+            ncol = length(columns),
+            nrow = nrow(bibframe)
+        )
+    )
+    colnames(newbibframe) <- columns
+    for (i in columns){
+        if (i %in% colnames(bibframe)){
+            newbibframe[i] <- bibframe[, i]
+        }
+    }
+    newbibframe <- unique(
+        unlist(
+            strsplit(
+                cleanText(
+                    as.character(
+                        newbibframe
+                    )
+                ),
+                "\\s+"
+            )
+        )
+    )
+    return(newbibframe)
 }
