@@ -13,117 +13,187 @@ library(synthesisr)
 library(writexl)
 library(shinycssloaders)
 
-options(shiny.maxRequestSize = 10000*1024^2, "repos" = c("CRAN" = "https://cran.rstudio.com", "tabulizer" = "https://github.com/ropensci/tabulizer", "tabulizerjars" = "https://github.com/ropensci/tabulizerjars"))
+options(
+    shiny.maxRequestSize = 10000*1024^2,
+    "repos" = c(
+        "CRAN" = "https://cran.rstudio.com",
+        "tabulizer" = "https://github.com/ropensci/tabulizer",
+        "tabulizerjars" = "https://github.com/ropensci/tabulizerjars"
+    )
+)
 
-ui <- navbarPage("SCRPT: SCReening Prioritisation Tool", header = tags$style(HTML(".navbar-nav li a {color: #003366 !important;}.navbar-brand{color: #003366 !important;}")),
-                 tabPanel("Home", icon = icon("home"),
-                          fluidRow(column(width = 6, offset = 3,
-                                          wellPanel(
-                                              style = "background-color: #003366; color:white;",
-                                              br(),
-                                              hr(style = "border-color: #FF6600; width: 25%; margin-left: 0"),
-                                              h4("SCRPT allows you to build up a set of keywords which will be used to screen through titles and abstract or full text files."),
-                                              br(),
-                                              h4("Start by working up your terms using the keyword tab. Next, select the Title & Abstract or Full Text tab to enter your data. To start screening, press the screen button on the appropriate tab."),
-                                              br()
-                                          )
-                          )
-                          )
-                 ),
-                 navbarMenu("Menu",
-                            tags$head(
-                                tags$style(
-                                    HTML(
-                                        "button.dt-button {
+ui <- navbarPage(
+    "SCRPT: SCReening Prioritisation Tool",
+    header = tags$style(
+        HTML(
+            ".navbar-nav li a {color: #003366 !important;}.navbar-brand{color: #003366 !important;}" #nolint
+        )
+    ),
+    tabPanel(
+        "Home",
+        icon = icon("home"),
+        fluidRow(
+            column(
+                width = 6,
+                offset = 3,
+                wellPanel(
+                    style = "background-color: #003366; color:white;",
+                    br(),
+                    hr(
+                        style = "border-color: #FF6600; width: 25%; margin-left: 0" #nolint
+                    ),
+                    h4(
+                        paste0(
+                            "SCRPT allows you to build up a set of keywords",
+                            "which will be used to screen through titles and",
+                            "abstract or full text files."
+                        )
+                    ),
+                    br(),
+                    h4(
+                        paste0(
+                            "Start by working up your terms using the keyword tab.",
+                            "Next, select the Title & Abstract or Full Text tab to enter your data.",
+                            "To start screening, press the screen button on the appropriate tab."
+                        ),
+                        br()
+                    )
+                )
+            )
+        ),
+        navbarMenu(
+            "Menu",
+            tags$head(
+                tags$style(
+                    HTML(
+                        "button.dt-button {
                              background: #003366 !important;
                              color: white !important;
                              border-color: #FF6600 !important;
-                                        }
-                                        thead {
-                             background: #003366 !important;
-                             color: white !important;
-                                        }
-                                        th {
-                             border-top: 1px solid #FF6600 !important;
-                             border-bottom: 1px solid #FF6600 !important;
-                                        }
-                                        td {
-                             border-bottom: 1px solid #FF6600 !important;
-                                        }
-                                        html {
-                             position: relative;
-                             min-height: 100%;
-                                        }
-                                        body {
-                             margin-bottom: 60px;
-                                        }
-                                        .footer{
-                             position:absolute;
-                             bottom:0;
-                             width:100%;
-                             height:50px;
-                             color: #003366;
-                             padding: 10px;
-                             background-color: #F5F5F5; 
-                             border-top: 1px solid #E0E0E0
-                                        }"
-                                    )
-                                )
-                            ),
-                            tabPanel("Unique Word Finder",
-                                sidebarPanel(width = 3,
-                                    style = "background-color: #003366; color:white;",
-                                    br(), 
-                                    br(),
-                                    hr(style = "border-color: #FF6600; width: 50%; margin-left: 0"),
-                                    h4("This page allows you to identify", strong(" unique words"), "which are only found in included studies"),
-                                    br(),
-                                    h4("This works by comparing words in the title, abstract and keywords of a user specified set of included studies and excluded studies"),
-                                    br(),
-                                    h4(strong("For example: "), "if included studies contained 'Happy', 'Sunshine' and 'Violet', and exlcuded studies contained 'Happy' and 'Violet', the unique word would be ", strong("'Sunshine'.")),
-                                    br()
-                                ),
-                                column(width = 6,
-                                       wellPanel(
-                                           style = "background-color: #003366; color:white; padding: 35px",
-                                           br(),
-                                           hr(style = "border-color: #FF6600; width: 50%; margin-left:0"),
-                                           h3(strong("Find unique words"), "- please enter two bibliographic files to compare"),
-                                           fileInput("uniq1_file", h3("upload included studies bibliographic file:"), multiple = FALSE),
-                                           fileInput("uniq2_file", h3("upload excluded studies bibliographic file:"), multiple = FALSE),
-                                           h4("Accepts bibliographies in .ris format"),
-                                           br(),
-                                           h5("upload your ris files and press the", strong("Find"), "button to start."),
-                                           h5("Results will appear in a table below and can be downloaded as an excel file."),
-                                           br(),
-                                           fluidRow(
-                                               column(1, offset = 0, actionButton("find", "Find", style = "background-color: #003366; color:white; border-color:#FF6600")),
-                                               column(1, offset = 1, downloadButton("uniqout", "Download Results", style = "background-color: #003366; color:white; border-color:#FF6600"))
-                                           ),
-                                           br(),
-                                           br(),
-                                           dataTableOutput("Unique") %>% withSpinner(type = 4, color = "#FF6600", size = 2),
-                                           br(),
-                                           br(),
-                                           br()
-                                       )
-                                )
-                            ),
-                            tabPanel("Search Builder",
-                                     sidebarPanel(width = 3,
-                                                  style = "background-color: #003366; color:white;",
-                                                  br(), 
-                                                  br(),
-                                                  hr(style = "border-color: #FF6600; width: 50%; margin-left: 0"),
-                                                  h4("Terms can be entered one at a time or as a string. If using", strong(" AND/OR"), "please enter statements in capitals, lower case and/or will be registered as keywords words."),
-                                                  br(),
-                                                  h4("To truncate words please stem the word at the appropriate point, you do not need use truncation symbols."),
-                                                  br(),
-                                                  h4("For adjacency please use", strong("NEAR/1"), ". Outer brackets around adjacency statements are not required but please use inner brackets if incorporating AND/OR statements."),
-                                                  br(),
-                                                  h4(strong("For example: Hockey NEAR/3 (ice OR rink OR skate)")),
-                                                  br()
-                                     ),
+                        }
+                        thead {
+                            background: #003366 !important;
+                            color: white !important;
+                        }
+                        th {
+                            border-top: 1px solid #FF6600 !important;
+                            border-bottom: 1px solid #FF6600 !important;
+                        }
+                        td {
+                            border-bottom: 1px solid #FF6600 !important;
+                        }
+                        html {
+                            position: relative;
+                            min-height: 100%;
+                        }
+                        body {
+                            margin-bottom: 60px;
+                        }
+                        .footer{
+                            position:absolute;
+                            bottom:0;
+                            width:100%;
+                            height:50px;
+                            color: #003366;
+                            padding: 10px;
+                            background-color: #F5F5F5; 
+                            border-top: 1px solid #E0E0E0
+                        }"
+                    )
+                )
+            ),
+            tabPanel(
+                "Unique Word Finder",
+                sidebarPanel(width = 3,
+                style = "background-color: #003366; color:white;",
+                br(), 
+                br(),
+                hr(style = "border-color: #FF6600; width: 50%; margin-left: 0"),
+                h4(
+                    "This page allows you to identify",
+                    strong(" unique words"),
+                    "which are only found in included studies"
+                ),
+                br(),
+                h4(
+                    "This works by comparing words in the title, abstract and keywords of",
+                    "a user specified set of included studies and excluded studies"
+                ),
+                br(),
+                h4(
+                    strong("For example: "),
+                    "if included studies contained 'Happy', 'Sunshine' and 'Violet',",
+                    "and exlcuded studies contained 'Happy' and 'Violet',",
+                    " the unique word would be ",
+                    strong("'Sunshine'.")
+                ),
+                br()
+            ),
+            column(
+                width = 6,
+                wellPanel(
+                style = "background-color: #003366; color:white; padding: 35px",
+                br(),
+                hr(style = "border-color: #FF6600; width: 50%; margin-left:0"),
+                h3(strong("Find unique words"), "- please enter two bibliographic files to compare"),
+                fileInput("uniq1_file", h3("upload included studies bibliographic file:"), multiple = FALSE),
+                fileInput("uniq2_file", h3("upload excluded studies bibliographic file:"), multiple = FALSE),
+                h4("Accepts bibliographies in .ris format"),
+                br(),
+                h5("upload your ris files and press the", strong("Find"), "button to start."),
+                h5("Results will appear in a table below and can be downloaded as an excel file."),
+                br(),
+                fluidRow(
+                    column(
+                        1,
+                        offset = 0,
+                        actionButton(
+                            "find",
+                            "Find",
+                            style = "background-color: #003366; color:white; border-color:#FF6600"
+                        )
+                    ),
+                    column(
+                        1,
+                        offset = 1,
+                        downloadButton(
+                            "uniqout",
+                            "Download Results",
+                            style = "background-color: #003366; color:white; border-color:#FF6600"
+                        )
+                    )
+                ),
+                br(),
+                br(),
+                dataTableOutput("Unique") %>% withSpinner(type = 4, color = "#FF6600", size = 2),
+                br(),
+                br(),
+                br()
+            )
+        )
+    ),
+    tabPanel(
+        "Search Builder",
+        sidebarPanel(
+            width = 3,
+            style = "background-color: #003366; color:white;",
+            br(), 
+            br(),
+            hr(style = "border-color: #FF6600; width: 50%; margin-left: 0"),
+            h4(
+                "Terms can be entered one at a time or as a string. If using",
+                strong(" AND/OR"),
+                "please enter statements in capitals, lower case",
+                "and/or will be registered as keywords words."
+            ),
+            br(),
+            h4("To truncate words please stem the word at the appropriate point, you do not need use truncation symbols."),
+            br(),
+            h4("For adjacency please use", strong("NEAR/1"), ". Outer brackets around adjacency statements are not required but please use inner brackets if incorporating AND/OR statements."),
+            br(),
+            h4(strong("For example: Hockey NEAR/3 (ice OR rink OR skate)")),
+            br()
+        ),
                                      column(width = 6,
                                             wellPanel(
                                                 style = "background-color: #003366; color:white; padding: 35px",
